@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trading Dark Psychology | FXKARAM</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Inter:wght@300;500&display=swap');
+        body { background-color: #050505; color: #fff; font-family: 'Inter', sans-serif; overflow: hidden; }
+        .glow-text { text-shadow: 0 0 10px rgba(239, 68, 68, 0.7); font-family: 'Orbitron', sans-serif; }
+        .glass-card { background: rgba(20, 20, 20, 0.8); backdrop-filter: blur(15px); border: 1px solid rgba(255, 255, 255, 0.05); box-shadow: 0 20px 50px rgba(0,0,0,0.5); }
+        .option-btn { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); border: 1px solid rgba(255,255,255,0.1); position: relative; overflow: hidden; }
+        .option-btn:active { transform: scale(0.98); }
+        .correct { background: rgba(34, 197, 94, 0.2) !important; border-color: #22c55e !important; color: #4ade80; }
+        .wrong { background: rgba(239, 68, 68, 0.2) !important; border-color: #ef4444 !important; color: #f87171; }
+        .footer-logo { position: fixed; bottom: 20px; left: 0; right: 0; text-align: center; font-size: 0.8rem; opacity: 0.6; }
+        .animate-slide { animation: slideIn 0.5s ease-out; }
+        @keyframes slideIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+</head>
+<body class="flex flex-col items-center justify-center min-h-screen p-6">
+
+    <div id="app" class="w-full max-w-md glass-card rounded-[2rem] p-8 relative z-10 animate-slide">
+        <div class="text-center mb-8">
+            <h1 class="glow-text text-red-600 text-xl font-bold tracking-widest">DARK PSYCHOLOGY</h1>
+            <div class="h-1 w-full bg-gray-900 mt-4 rounded-full overflow-hidden">
+                <div id="progress-bar" class="h-full bg-red-600 w-0 transition-all duration-500"></div>
+            </div>
+        </div>
+
+        <div id="quiz-screen">
+            <p id="q-text" class="text-lg font-medium mb-8 leading-relaxed"></p>
+            <div id="options-container" class="space-y-4"></div>
+        </div>
+
+        <div id="result-screen" class="hidden text-center">
+            <div id="icon-box" class="text-6xl mb-4"></div>
+            <h2 id="result-title" class="text-2xl font-bold mb-2"></h2>
+            <p id="result-desc" class="text-gray-400 mb-8 px-4"></p>
+            <button onclick="location.reload()" class="w-full py-4 bg-red-600 rounded-xl font-bold hover:bg-red-700 shadow-lg shadow-red-900/20 transition">TRY AGAIN</button>
+        </div>
+    </div>
+
+    <div class="footer-logo flex flex-col items-center gap-1">
+        <div class="flex items-center gap-2">
+            <i class="fab fa-telegram text-blue-400"></i>
+            <span class="tracking-widest">FREE EDUCATION - @FXKARAM</span>
+        </div>
+    </div>
+
+    <audio id="snd-correct" src="https://assets.mixkit.co/active_storage/sfx/2000/2000-preview.mp3"></audio>
+    <audio id="snd-wrong" src="https://assets.mixkit.co/active_storage/sfx/2019/2019-preview.mp3"></audio>
+    <audio id="snd-claps" src="https://assets.mixkit.co/active_storage/sfx/1435/1435-preview.mp3"></audio>
+
+    <script>
+        const questions = [
+            {
+                q: "Stop Loss ထိတဲ့အခါ ထူပူလာတာ ဒါမှမဟုတ် လက်လျှော့ချင်လာတာက ဘယ်အချက်ကြောင့်လဲ?",
+                options: ["Strategy မကောင်းလို့", "Survival Instinct ကြောင့်", "Market က တမင်လုပ်လို့"],
+                correct: 1
+            },
+            {
+                q: "Trading မှာ 'အရှုံး' (Loss) ဆိုတာ ဘာလဲ?",
+                options: ["အောင်မြင်မှုအတွက် ဆေးရောင်စုံများ", "ရပ်တန့်ရမယ့် အချက်ပြမှု", "Trader တစ်ယောက်ရဲ့ အားနည်းချက်"],
+                correct: 0
+            },
+            {
+                q: "Stop Loss ထိသွားခြင်းရဲ့ တကယ့်အကျိုးကျေးဇူးက ဘာလဲ?",
+                options: ["ငွေကုန်သွားတာပဲ ရှိတယ်", "Trading Insight ကို ပိုပွင့်စေတယ်", "စိတ်ဓာတ်ကျစေတယ်"],
+                correct: 1
+            }
+        ];
+
+        let currentIdx = 0;
+        let score = 0;
+        let canClick = true;
+
+        function loadQuestion() {
+            canClick = true;
+            const q = questions[currentIdx];
+            document.getElementById('q-text').innerText = q.q;
+            document.getElementById('progress-bar').style.width = `${(currentIdx / questions.length) * 100}%`;
+            
+            const container = document.getElementById('options-container');
+            container.innerHTML = '';
+            
+            q.options.forEach((opt, i) => {
+                const btn = document.createElement('button');
+                btn.className = 'option-btn w-full p-5 rounded-2xl text-left bg-white/5 border border-white/10 hover:bg-white/10 transition flex justify-between items-center';
+                btn.innerHTML = `<span>${opt}</span><i class="fas fa-chevron-right text-xs opacity-30"></i>`;
+                btn.onclick = () => checkAnswer(i, btn);
+                container.appendChild(btn);
+            });
+        }
+
+        function checkAnswer(idx, btn) {
+            if (!canClick) return;
+            canClick = false;
+            
+            const q = questions[currentIdx];
+            const allBtns = document.querySelectorAll('.option-btn');
+            
+            if (idx === q.correct) {
+                score++;
+                btn.classList.add('correct');
+                document.getElementById('snd-correct').play();
+            } else {
+                btn.classList.add('wrong');
+                allBtns[q.correct].classList.add('correct'); // အဖြေမှန်ကို ပြပေးမယ်
+                document.getElementById('snd-wrong').play();
+            }
+
+            setTimeout(() => {
+                currentIdx++;
+                if (currentIdx < questions.length) {
+                    loadQuestion();
+                } else {
+                    showResult();
+                }
+            }, 1500);
+        }
+
+        function showResult() {
+            document.getElementById('quiz-screen').classList.add('hidden');
+            document.getElementById('result-screen').classList.remove('hidden');
+            document.getElementById('progress-bar').style.width = '100%';
+            
+            const title = document.getElementById('result-title');
+            const desc = document.getElementById('result-desc');
+            const icon = document.getElementById('icon-box');
+
+            if (score === questions.length) {
+                icon.innerHTML = '🏆';
+                title.innerText = "MASTER TRADER!";
+                desc.innerText = "မင်းက Survival Instinct ကို လုံးဝထိန်းချုပ်နိုင်သွားပြီ။ Professional တစ်ယောက်ဖြစ်ဖို့ အသင့်ပဲ Professor!";
+                document.getElementById('snd-claps').play();
+            } else if (score > 0) {
+                icon.innerHTML = '🔥';
+                title.innerText = "KEEP GOING!";
+                desc.innerText = "မင်းမှာ Insight တွေ ရှိနေပြီ။ နောက်ထပ် နည်းနည်းလေးပဲ လိုတော့တယ်။ အရှုံးကို ဆေးရောင်ခြယ်ဖို့ မမေ့နဲ့။";
+            } else {
+                icon.innerHTML = '🛡️';
+                title.innerText = "DON'T GIVE UP!";
+                desc.innerText = "စိတ်ဓာတ်မကျပါနဲ့ Professor။ အခုမှ စတာပဲရှိသေးတယ်။ Survival Instinct ဆိုတာ လူတိုင်းမှာ ရှိတတ်တဲ့ အရာပါ။ ပြန်စကြရအောင်။";
+            }
+        }
+
+        loadQuestion();
+    </script>
+</body>
+</html>
